@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Water Quality Monitor</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #081316;
+    --panel: #0e1e22;
+    --line: #1c3339;
+    --text: #dceef0;
+    --text-dim: #6f9298;
+    --accent: #35d0c4;
+    --warn: #e8b34c;
+    --danger: #e2645a;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+  }
+
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 20px;
+    margin-bottom: 36px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin: 0;
+  }
+
+  .device-id {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    transition: background 0.3s ease;
+  }
+
+  .dot.live { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+  .readouts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+
+  @media (max-width: 640px) {
+    .readouts { grid-template-columns: 1fr; }
+  }
+
+  .readout {
+    background: var(--panel);
+    padding: 28px 24px;
+  }
+
+  .readout .label {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+  }
+
+  .readout .value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 42px;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .readout .value .unit {
+    font-size: 16px;
+    color: var(--text-dim);
+    margin-left: 6px;
+  }
+
+  .readout .quality {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .readout .quality.warn { color: var(--warn); }
+  .readout .quality.danger { color: var(--danger); }
+
+  .meta {
+    margin-top: 28px;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .empty-note {
+    margin-top: 28px;
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Water Quality Monitor</h1>
+        <div class="device-id" id="deviceId">waiting for device&hellip;</div>
+      </div>
+      <div class="status">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">connecting</span>
+      </div>
+    </header>
+
+    <div class="readouts">
+      <div class="readout">
+        <div class="label">pH</div>
+        <div class="value" id="phValue">&mdash;</div>
+        <div class="quality" id="phQuality"></div>
+      </div>
+      <div class="readout">
+        <div class="label">Turbidity</div>
+        <div class="value" id="turbidityValue">&mdash;<span class="unit">NTU</span></div>
+        <div class="quality" id="turbidityQuality"></div>
+      </div>
+      <div class="readout">
+        <div class="label">TDS</div>
+        <div class="value" id="tdsValue">&mdash;<span class="unit">ppm</span></div>
+        <div class="quality" id="tdsQuality"></div>
+      </div>
+    </div>
+
+    <div class="meta">
+      <span id="lastUpdated">no readings yet</span>
+      <span id="reconnectNote"></span>
+    </div>
+
+    <p class="empty-note" id="emptyNote">
+      Waiting for the first reading from your device. Make sure the ESP8266
+      firmware is powered on, connected to WiFi, and pointed at this server's
+      WebSocket endpoint.
+    </p>
+  </div>
+
+<script>
+  const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/api/ws';
+
+  const dot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const deviceId = document.getElementById('deviceId');
+  const lastUpdated = document.getElementById('lastUpdated');
+  const emptyNote = document.getElementById('emptyNote');
+  const reconnectNote = document.getElementById('reconnectNote');
+
+  const phValue = document.getElementById('phValue');
+  const phQuality = document.getElementById('phQuality');
+  const turbidityValue = document.getElementById('turbidityValue');
+  const turbidityQuality = document.getElementById('turbidityQuality');
+  const tdsValue = document.getElementById('tdsValue');
+  const tdsQuality = document.getElementById('tdsQuality');
+
+  function setStatus(live, label) {
+    dot.classList.toggle('live', live);
+    statusText.textContent = label;
+  }
+
+  function qualityForPH(ph) {
+    if (ph === null || ph === undefined) return { text: '', cls: '' };
+    if (ph < 6.0) return { text: 'Acidic', cls: 'warn' };
+    if (ph > 8.5) return { text: 'Alkaline', cls: 'warn' };
+    return { text: 'Neutral range', cls: '' };
+  }
+
+  function qualityForTurbidity(ntu) {
+    if (ntu === null || ntu === undefined) return { text: '', cls: '' };
+    if (ntu > 50) return { text: 'High turbidity', cls: 'danger' };
+    if (ntu > 10) return { text: 'Slightly cloudy', cls: 'warn' };
+    return { text: 'Clear', cls: '' };
+  }
+
+  function qualityForTDS(ppm) {
+    if (ppm === null || ppm === undefined) return { text: '', cls: '' };
+    if (ppm > 1000) return { text: 'High dissolved solids', cls: 'danger' };
+    if (ppm > 500) return { text: 'Elevated', cls: 'warn' };
+    return { text: 'Good', cls: '' };
+  }
+
+  function renderReading(msg) {
+    emptyNote.style.display = 'none';
+    deviceId.textContent = msg.device_id || 'unknown device';
+
+    if (typeof msg.ph === 'number') {
+      phValue.innerHTML = msg.ph.toFixed(2);
+      const q = qualityForPH(msg.ph);
+      phQuality.textContent = q.text;
+      phQuality.className = 'quality ' + q.cls;
+    } else {
+      phValue.innerHTML = '&mdash;';
+      phQuality.textContent = 'sensor error';
+      phQuality.className = 'quality warn';
+    }
+
+    if (typeof msg.turbidity_ntu === 'number') {
+      turbidityValue.innerHTML = msg.turbidity_ntu.toFixed(1) + '<span class="unit">NTU</span>';
+      const q = qualityForTurbidity(msg.turbidity_ntu);
+      turbidityQuality.textContent = q.text;
+      turbidityQuality.className = 'quality ' + q.cls;
+    }
+
+    if (typeof msg.tds_ppm === 'number') {
+      tdsValue.innerHTML = msg.tds_ppm.toFixed(0) + '<span class="unit">ppm</span>';
+      const q = qualityForTDS(msg.tds_ppm);
+      tdsQuality.textContent = q.text;
+      tdsQuality.className = 'quality ' + q.cls;
+    }
+
+    const receivedAt = msg.received_at ? new Date(msg.received_at) : new Date();
+    lastUpdated.textContent = 'last update ' + receivedAt.toLocaleTimeString();
+  }
+
+  let socket;
+  let reconnectDelay = 2000;
+
+  function connect() {
+    setStatus(false, 'connecting');
+    socket = new WebSocket(WS_URL);
+
+    socket.onopen = () => {
+      setStatus(true, 'live');
+      reconnectNote.textContent = '';
+      reconnectDelay = 2000;
+      socket.send(JSON.stringify({ type: 'subscribe' }));
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        renderReading(msg);
+      } catch (err) {
+        // ignore malformed message
+      }
+    };
+
+    socket.onclose = () => {
+      setStatus(false, 'disconnected');
+      reconnectNote.textContent = 'reconnecting in ' + (reconnectDelay / 1000) + 's';
+      setTimeout(connect, reconnectDelay);
+      reconnectDelay = Math.min(reconnectDelay * 1.5, 15000);
+    };
+
+    socket.onerror = () => {
+      socket.close();
+    };
+  }
+
+  connect();
+</script>
+</body>
+</html>
