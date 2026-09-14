@@ -25,13 +25,13 @@
 #include <ArduinoJson.h>
 
 // ---------------------- WiFi credentials ----------------------------
-const char* WIFI_SSID     = "YOUR_WIFI_SSID";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* WIFI_SSID     = "canalbox-2G";
+const char* WIFI_PASSWORD = "12345678910";
 
 // ---------------------- WebSocket server -----------------------------
 // Point this at your deployed Vercel app. Use "wss" + port 443 for a
 // production Vercel deployment (TLS is handled by Vercel automatically).
-const char* WS_HOST = "your-app.vercel.app";
+const char* WS_HOST = "water-quality-monitor-two.vercel.app";
 const uint16_t WS_PORT = 443;
 const char* WS_PATH = "/api/ws";
 const bool WS_USE_TLS = true;
