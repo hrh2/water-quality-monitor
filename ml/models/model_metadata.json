@@ -1,0 +1,33 @@
+{
+  "model_name": "random_forest",
+  "feature_columns": [
+    "ph",
+    "turbidity_ntu",
+    "tds_ppm"
+  ],
+  "class_labels": [
+    "Safe",
+    "Moderate",
+    "Unsafe",
+    "Critical"
+  ],
+  "trained_at_utc": "2026-09-15T21:05:09Z",
+  "random_seed": 42,
+  "test_size": 0.2,
+  "cv_folds": 5,
+  "dataset_path": "data/generated/water_quality_dataset.csv",
+  "dataset_rows": 6000,
+  "selection_metric": "cv_f1_macro_mean (training split only), restricted to portable-exportable models",
+  "overall_best_model_by_cv": "gradient_boosting",
+  "selected_for_deployment": "random_forest",
+  "deployability_note": "Model selection is restricted to model families ['decision_tree', 'logistic_regression', 'random_forest'] that ml/inference/export_portable_model.py can serialize for the Node.js prediction API. See docs/architecture/adr-002-ml-inference-runtime.md.",
+  "final_test_metrics": {
+    "accuracy": 0.93,
+    "precision_macro": 0.9138802727950256,
+    "recall_macro": 0.9182014826922915,
+    "f1_macro": 0.9156305086656074,
+    "f1_weighted": 0.9306156721522317,
+    "roc_auc_ovr_macro": 0.9924922365181901
+  },
+  "note": "water_quality_category is a rule-derived simulated label, not a lab-confirmed potability ground truth. See docs/machine-learning/target-methodology.md and docs/limitations/ml-limitations.md."
+}

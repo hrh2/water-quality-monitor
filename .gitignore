@@ -1,2 +1,14 @@
-node_modules
-.vercel
+node_modules/
+.vercel/
+.env
+.env.local
+
+# Python
+ml/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Editor/OS lock files
+.~lock.*#
+.DS_Store

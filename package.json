@@ -1,10 +1,20 @@
 {
   "name": "water-quality-monitor-server",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "migrate": "node scripts/apply_migrations.js",
+    "seed:admin": "node scripts/seed_admin.js",
+    "seed:model-version": "node scripts/seed_model_version.js",
+    "test": "node --test",
+    "dev": "vercel dev"
+  },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.12.0",
     "ws": "^8.18.0"
   }
 }
