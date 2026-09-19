@@ -105,11 +105,20 @@ export const Api = {
   login(email, password) {
     return request('/api/auth/login', { method: 'POST', body: { email, password }, auth: false });
   },
+  register(email, password, first_name, last_name) {
+    return request('/api/auth/register', { method: 'POST', body: { email, password, first_name, last_name }, auth: false });
+  },
   me() {
     return request('/api/auth/me');
   },
   changePassword(current_password, new_password) {
     return request('/api/auth/change-password', { method: 'POST', body: { current_password, new_password } });
+  },
+  getUsers() {
+    return request('/api/users');
+  },
+  patchUser(id, action) {
+    return request('/api/users', { method: 'PATCH', body: { id, action } });
   },
   getDevices() {
     return request('/api/devices');
@@ -135,7 +144,56 @@ export const Api = {
   patchAlert(id, action) {
     return request('/api/alerts', { method: 'PATCH', body: { id, action } });
   },
-  getHealth() {
-    return request('/api/system/health');
+  /** Role-aware: admins get cross-platform system status, regular users
+   * get their own usage stats. See api/dashboard.js. */
+  getDashboard() {
+    return request('/api/dashboard');
+  },
+  /** Downloads a report file (CSV/PDF) and saves it via the browser's
+   * normal download mechanism. Unlike `request()`, the response body is a
+   * file, not JSON, so this fetches and unwraps it separately rather than
+   * going through the shared JSON path - but still reuses the same
+   * auth/401 handling. */
+  async downloadReport(type, params) {
+    const token = getToken();
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    let res;
+    try {
+      res = await fetch(`/api/reports/${encodeURIComponent(type)}${toQuery(params)}`, { headers });
+    } catch {
+      throw new NetworkError('Could not reach the server. Check your connection and try again.');
+    }
+
+    if (res.status === 401) {
+      clearToken();
+      if (unauthorizedHandler) unauthorizedHandler();
+      throw new ApiError(401, 'Your session has expired. Please sign in again.');
+    }
+    if (!res.ok) {
+      let message = `Request failed (${res.status})`;
+      try {
+        const data = await res.json();
+        if (data?.error) message = data.error;
+      } catch {
+        /* response wasn't JSON - keep the generic message */
+      }
+      throw new ApiError(res.status, message);
+    }
+
+    const blob = await res.blob();
+    const disposition = res.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="([^"]+)"/);
+    const filename = match ? match[1] : `${type}-report.${params?.format || 'csv'}`;
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   },
 };

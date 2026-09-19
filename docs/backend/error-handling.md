@@ -15,7 +15,7 @@ Every exported REST route handler in `api/*.js` is wrapped with
    (`console.error(err)`), and best-effort inserts a row into
    `system_events` (`event_type: 'unhandled_error'`, `message: err.message`,
    `metadata: {stack: err.stack, path: req.url}`) so admins can see it on
-   the dashboard's "System" tab (surfaced via `GET /api/system/health`'s
+   the dashboard's "System" tab (surfaced via `GET /api/dashboard`'s
    `recent_system_events`).
 3. Responds to the client with a flat, generic
    `500 {"error": "Internal server error"}` - **no stack trace, message

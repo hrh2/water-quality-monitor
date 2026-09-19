@@ -1,18 +1,62 @@
 # Database Schema
 
-Narrative walkthrough of `db/migrations/0001_init.sql`. See
-`docs/diagrams/06-database-er-diagram.md` for the Mermaid ER diagram and
-`docs/architecture/adr-001-database-choice.md` for why Postgres + plain SQL
-migrations were chosen over an ORM.
+Narrative walkthrough of `db/migrations/0001_init.sql` and
+`0002_users_and_roles.sql`. See `docs/diagrams/06-database-er-diagram.md`
+for the Mermaid ER diagram and `docs/architecture/adr-001-database-choice.md`
+for why Postgres + plain SQL migrations were chosen over an ORM.
 
 ## Tables
 
-### `admins`
+### `users`
 
-One row per dashboard administrator. `password_hash` is bcrypt
-(`docs/backend/authentication.md`). `must_change_password` defaults to
-`true` and is only cleared by a successful password change. `last_login_at`
-is updated on every successful `POST /api/auth/login`.
+One row per account, either role. Migration `0002_users_and_roles.sql`
+replaced the original single-role `admins` table with this one, adding a
+`role` column (`'admin' | 'user'`) rather than running two parallel auth
+systems - login, password hashing, and JWT issuance are identical for both
+roles; only authorization (which endpoints a role may call) differs,
+enforced in `api/_lib/http.js::requireAuth`. The pre-existing admin
+account(s) were migrated in place with `role = 'admin'` so nobody needed
+to re-register.
+
+- `first_name`/`last_name` (added in `0003_profile_and_prediction_log.sql`)
+  are nullable - required for new registrations (`POST /api/auth/register`)
+  but not backfilled for accounts created before this migration (e.g. a
+  seeded admin), so the dashboard greeting always has a `null`-safe
+  fallback rather than showing a fabricated name.
+- `password_hash` is bcrypt (`docs/backend/authentication.md`).
+- `must_change_password` defaults to `false`. It's only ever set `true` by
+  `scripts/seed_admin.js` (a seeded admin gets a temporary password) - a
+  self-registered user chose their own password at signup, so it's never
+  forced for them. Cleared by a successful password change either way.
+- `is_active` gates login **and every subsequent authenticated request** -
+  `requireAuth` re-reads it from the database on every call, not just at
+  login, so an admin deactivating a user takes effect on that user's very
+  next request rather than only their next login attempt.
+- `last_login_at` is updated on every successful `POST /api/auth/login`.
+- No "last active admin" lockout guard exists on deactivation - it would
+  be unreachable dead code given the self-deactivation guard already makes
+  a total-admin-lockout impossible through this API; see
+  `api/users/index.js`'s comment.
+
+### `prediction_requests`
+
+Added in `0003_profile_and_prediction_log.sql`. One row per **what-if**
+call to `POST /api/predict` (`api/predict.js`), tied to the calling user,
+not to any device. Deliberately a **separate table from `predictions`**,
+not a reuse of it: `predictions.reading_id` is `NOT NULL` and tied to a
+real sensor reading from an actual device, whereas a what-if request is a
+hypothetical value a user typed in with no associated reading. Giving it a
+nullable `reading_id` on the existing table would blur "this is what a
+real sensor measured" with "this is what a user asked to simulate" -
+exactly the kind of Measured-vs-Simulated distinction this project is
+careful to keep explicit elsewhere (`docs/machine-learning/target-methodology.md` §1).
+
+Powers the per-user Dashboard's usage stats (`GET /api/dashboard` for
+`role='user'`): total predictions run, their category breakdown, and a
+recent list - always filtered by `user_id`, so one user's dashboard can
+never show another user's prediction history.
+
+Index: `idx_prediction_requests_user_time (user_id, created_at DESC)`.
 
 ### `devices`
 
@@ -120,7 +164,7 @@ Index: `idx_alerts_status (status, created_at DESC)` - supports
 Free-form operational log: device registrations, auth failures, rejected
 readings, unhandled errors, WS connection errors. `metadata` is `JSONB` for
 whatever structured context a given event needs (e.g. `{device_id}`,
-`{stack, path}`). Consumed by `GET /api/system/health`'s
+`{stack, path}`). Consumed by `GET /api/dashboard`'s
 `recent_system_events` and by the device `Connection error` status
 derivation (`hasWsErrorRecently`).
 

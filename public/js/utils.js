@@ -87,6 +87,17 @@ export function alertStatusBadge(status) {
   return `<span class="badge ${cls}">${escapeHtml(status || 'unknown')}</span>`;
 }
 
+export function roleBadge(role) {
+  const cls = role === 'admin' ? 'badge-accent' : 'badge-info';
+  return `<span class="badge ${cls}">${escapeHtml(role || 'user')}</span>`;
+}
+
+export function activeStatusBadge(isActive) {
+  return isActive
+    ? '<span class="badge badge-accent">active</span>'
+    : '<span class="badge badge-dim">deactivated</span>';
+}
+
 /** Renders the standard loading / error / empty / content state block into
  * a container. `render` is only called for the 'content' state. */
 export function renderState(container, state, opts = {}) {

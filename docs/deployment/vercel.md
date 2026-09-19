@@ -94,7 +94,36 @@ to the stripped-prefix form (`/css/admin.css`, `/js/app.js`). See
 `docs/frontend/dashboard.md`. `scripts/dev_server.js` mirrors this exact
 convention locally so local dev and production behave the same way.
 
-## 6. Deploying
+## 6. Function count accounting (kept current as features are added)
+
+The `api/_lib/` fix above bought headroom, but every *new route* still
+costs one function against the same 12-function Hobby-plan ceiling. When
+multi-user support (registration, user management, report export) was
+added, four planned new endpoints would have pushed the count to 14. The
+fix applied then: consolidate the four auth actions (login, register, me,
+change-password) - which differ only in request parsing, not routing
+concerns - into one dynamic route, `api/auth/[action].js`, dispatching on
+`req.query.action`. See that file's header comment. Current accounting:
+
+| File | Routes it serves |
+|---|---|
+| `api/ws.js` | WebSocket relay |
+| `api/auth/[action].js` | login, register, me, change-password |
+| `api/devices/index.js` | list, register device |
+| `api/devices/[deviceId].js` | device detail |
+| `api/readings.js` | query, manual ingest |
+| `api/predict.js` | what-if prediction |
+| `api/predictions.js` | list predictions |
+| `api/alerts.js` | list, acknowledge/resolve |
+| `api/dashboard.js` | role-aware dashboard stats (admin cross-platform / user self-scoped), plus system health for the System tab |
+| `api/users/index.js` | list, activate/deactivate |
+| `api/reports/[type].js` | CSV/PDF export |
+
+11 functions total, 1 under the limit. Before adding another `api/*.js`
+file, either fold it into an existing dynamic route (as above) or confirm
+the count still fits - `find api -name "*.js" -not -path "api/_lib/*" | wc -l`.
+
+## 7. Deploying
 
 ```
 npm install

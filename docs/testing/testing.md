@@ -67,7 +67,7 @@ that fits its layer.
 
 - No automated test currently exercises the HTTP route handlers
   (`api/auth/*.js`, `api/devices/*.js`, `api/readings.js`, `api/predict.js`,
-  `api/predictions.js`, `api/alerts.js`, `api/system/health.js`) directly -
+  `api/predictions.js`, `api/alerts.js`, `api/dashboard.js`) directly -
   coverage there is indirect, through the shared `api/_lib/*` functions they
   call, plus the integration test's exercise of `ingestReading`.
 - No automated test re-verifies JS/Python inference parity on every run -

@@ -146,6 +146,15 @@ button, input, select {
 .auth-card h1 {
   font-size: 20px;
   margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.brand-mark {
+  width: 20px;
+  height: 20px;
+  fill: var(--accent);
+  flex-shrink: 0;
 }
 .auth-card .sub {
   color: var(--text-dim);
@@ -167,6 +176,14 @@ button, input, select {
   background: rgba(232, 179, 76, 0.08);
 }
 .auth-card .full-btn { width: 100%; margin-top: 4px; }
+.auth-card .auth-switch {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: center;
+}
+.auth-card .auth-switch a { color: var(--accent); text-decoration: none; }
+.auth-card .auth-switch a:hover { text-decoration: underline; }
 .auth-card .privacy-note {
   margin-top: 20px;
   font-size: 11px;
@@ -199,6 +216,13 @@ button, input, select {
   font-size: 15px;
   margin: 0 0 3px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sidebar .brand h1 .brand-mark {
+  width: 17px;
+  height: 17px;
 }
 .sidebar .brand .sub { font-size: 11px; color: var(--text-dim); }
 
@@ -230,7 +254,6 @@ button, input, select {
   color: var(--accent);
   font-weight: 600;
 }
-.nav-list .nav-icon { font-family: 'IBM Plex Mono', monospace; font-size: 12px; width: 18px; text-align: center; }
 .nav-list .nav-badge {
   margin-left: auto;
   font-family: 'IBM Plex Mono', monospace;

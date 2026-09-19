@@ -32,7 +32,7 @@ test('GET /api/readings, /api/devices/:deviceId, /api/predictions reflect ingest
 
   const adminEmail = `test-admin-${crypto.randomUUID()}@example.com`;
   const { rows: adminRows } = await query(
-    'INSERT INTO admins (email, password_hash) VALUES ($1, $2) RETURNING id, email',
+    "INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'admin') RETURNING id, email, role",
     [adminEmail, await hashPassword('AdminPassword123')]
   );
   const adminToken = issueToken(adminRows[0]);
@@ -86,6 +86,6 @@ test('GET /api/readings, /api/devices/:deviceId, /api/predictions reflect ingest
     assert.ok(predictionsRes.body.predictions.every((p) => p.water_quality_category === 'Critical'));
   } finally {
     await query('DELETE FROM devices WHERE device_id = $1', [deviceId]);
-    await query('DELETE FROM admins WHERE email = $1', [adminEmail]);
+    await query('DELETE FROM users WHERE email = $1', [adminEmail]);
   }
 });

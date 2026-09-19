@@ -28,17 +28,17 @@ async function main() {
   const passwordHash = await bcrypt.hash(password, 12);
   const normalizedEmail = email.toLowerCase();
 
-  const { rows: existing } = await client.query('SELECT id FROM admins WHERE email = $1', [normalizedEmail]);
+  const { rows: existing } = await client.query('SELECT id FROM users WHERE email = $1', [normalizedEmail]);
 
   if (existing.length > 0) {
     await client.query(
-      'UPDATE admins SET password_hash = $1, must_change_password = true WHERE id = $2',
+      "UPDATE users SET password_hash = $1, role = 'admin', must_change_password = true, is_active = true WHERE id = $2",
       [passwordHash, existing[0].id]
     );
-    console.log(`Updated existing admin ${normalizedEmail}. must_change_password=true.`);
+    console.log(`Updated existing user ${normalizedEmail} to role=admin. must_change_password=true.`);
   } else {
     await client.query(
-      'INSERT INTO admins (email, password_hash, must_change_password) VALUES ($1, $2, true)',
+      "INSERT INTO users (email, password_hash, role, must_change_password, is_active) VALUES ($1, $2, 'admin', true, true)",
       [normalizedEmail, passwordHash]
     );
     console.log(`Created admin ${normalizedEmail}. must_change_password=true.`);

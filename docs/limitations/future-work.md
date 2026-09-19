@@ -28,10 +28,14 @@ Realistic next steps, grounded in the specific gaps documented in
 
 ## Backend / security
 
-- **Rate limiting** on `POST /api/auth/login` (with backoff/lockout after
-  repeated failures) and on the reading-ingestion endpoints.
-- **RBAC** - a role/permission column on `admins`, replacing the current
-  single-tier model.
+- **Rate limiting** on `POST /api/auth/login`/`register` (with
+  backoff/lockout after repeated failures) and on the reading-ingestion
+  endpoints.
+- **Finer-grained RBAC** - a two-role model (`admin`/`user`) now exists
+  (`users.role`), but there's no permission tier finer than that (e.g. a
+  read-only admin, a per-device-scoped admin) and no in-app way to promote
+  a `user` to `admin` - only `scripts/seed_admin.js`, run outside the app.
+- **Email verification** on `POST /api/auth/register` - currently none.
 - **Refresh-token rotation** and a token-revocation mechanism, instead of
   relying solely on a fixed 12-hour JWT expiry.
 - **Redis-backed (or similar) shared state for `api/ws.js`**, replacing the
@@ -52,7 +56,7 @@ Realistic next steps, grounded in the specific gaps documented in
 
 - **HTTP route-handler tests** for `api/auth/*.js`, `api/devices/*.js`,
   `api/readings.js`, `api/predict.js`, `api/predictions.js`,
-  `api/alerts.js`, `api/system/health.js` - currently only indirectly
+  `api/alerts.js`, `api/dashboard.js` - currently only indirectly
   covered through the shared `api/_lib/*` functions
   (`docs/testing/testing.md` §4).
 - **An automated JS/Python inference-parity test** that runs on every

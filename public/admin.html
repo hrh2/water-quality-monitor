@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Water Quality Monitor &mdash; Admin</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="stylesheet" href="/css/admin.css" />
 </head>
 <body>
@@ -11,8 +12,8 @@
   <!-- ============ Login screen ============ -->
   <div class="auth-screen" id="loginScreen">
     <div class="auth-card">
-      <h1>Admin Console</h1>
-      <p class="sub">Water Quality Monitor &mdash; sign in to continue</p>
+      <h1><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5c-.9 1.2-3 4.1-5 7.3C8.6 13.6 6.5 17.6 6.5 20.5a9.5 9.5 0 0 0 19 0c0-2.9-2.1-6.9-4.5-10.7-2-3.2-4.1-6.1-5-7.3z"/></svg>Sign in</h1>
+      <p class="sub">Water Quality Monitor Console</p>
       <div class="banner hidden" id="loginBanner"></div>
       <form id="loginForm">
         <div class="field">
@@ -25,6 +26,7 @@
         </div>
         <button type="submit" class="btn btn-primary full-btn" id="loginSubmitBtn">Sign in</button>
       </form>
+      <p class="auth-switch">No account yet? <a href="#" id="showRegisterLink">Register</a></p>
       <p class="privacy-note">
         This console keeps your session token in this browser's local storage for
         convenience. That is a pragmatic choice for this project, not an
@@ -33,10 +35,42 @@
     </div>
   </div>
 
+  <!-- ============ Registration screen ============ -->
+  <div class="auth-screen hidden" id="registerScreen">
+    <div class="auth-card">
+      <h1><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5c-.9 1.2-3 4.1-5 7.3C8.6 13.6 6.5 17.6 6.5 20.5a9.5 9.5 0 0 0 19 0c0-2.9-2.1-6.9-4.5-10.7-2-3.2-4.1-6.1-5-7.3z"/></svg>Create an account</h1>
+      <p class="sub">Registered users can run predictions and export reports.</p>
+      <div class="banner hidden" id="registerBanner"></div>
+      <form id="registerForm">
+        <div class="inline-fields">
+          <div class="field">
+            <label for="registerFirstName">First name</label>
+            <input type="text" id="registerFirstName" required autocomplete="given-name" />
+          </div>
+          <div class="field">
+            <label for="registerLastName">Last name</label>
+            <input type="text" id="registerLastName" required autocomplete="family-name" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="registerEmail">Email</label>
+          <input type="email" id="registerEmail" required autocomplete="username" />
+        </div>
+        <div class="field">
+          <label for="registerPassword">Password</label>
+          <input type="password" id="registerPassword" required minlength="10" autocomplete="new-password" />
+          <span class="hint">At least 10 characters.</span>
+        </div>
+        <button type="submit" class="btn btn-primary full-btn" id="registerSubmitBtn">Create account</button>
+      </form>
+      <p class="auth-switch">Already have an account? <a href="#" id="showLoginLink">Sign in</a></p>
+    </div>
+  </div>
+
   <!-- ============ Forced change-password screen ============ -->
   <div class="auth-screen hidden" id="changePasswordScreen">
     <div class="auth-card">
-      <h1>Set a new password</h1>
+      <h1><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5c-.9 1.2-3 4.1-5 7.3C8.6 13.6 6.5 17.6 6.5 20.5a9.5 9.5 0 0 0 19 0c0-2.9-2.1-6.9-4.5-10.7-2-3.2-4.1-6.1-5-7.3z"/></svg>Set a new password</h1>
       <p class="sub">Your account is using a temporary password. Choose a new one to continue.</p>
       <div class="banner hidden" id="changePasswordBanner"></div>
       <form id="changePasswordForm">
@@ -62,17 +96,19 @@
   <div class="app-shell hidden" id="appShell">
     <aside class="sidebar">
       <div class="brand">
-        <h1>Water Quality Monitor</h1>
+        <h1><svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.5c-.9 1.2-3 4.1-5 7.3C8.6 13.6 6.5 17.6 6.5 20.5a9.5 9.5 0 0 0 19 0c0-2.9-2.1-6.9-4.5-10.7-2-3.2-4.1-6.1-5-7.3z"/></svg>Water Quality Monitor</h1>
         <div class="sub">Admin Console</div>
       </div>
       <ul class="nav-list">
-        <li><button data-tab="overview" class="active"><span class="nav-icon">01</span> Overview</button></li>
-        <li><button data-tab="sensors"><span class="nav-icon">02</span> Sensor Monitoring</button></li>
-        <li><button data-tab="waterquality"><span class="nav-icon">03</span> Water Quality</button></li>
-        <li><button data-tab="alerts"><span class="nav-icon">04</span> Alerts</button></li>
-        <li><button data-tab="devices"><span class="nav-icon">05</span> Devices</button></li>
-        <li><button data-tab="ml"><span class="nav-icon">06</span> ML / Prediction</button></li>
-        <li><button data-tab="system"><span class="nav-icon">07</span> System</button></li>
+        <li><button data-tab="dashboard" class="active">Dashboard</button></li>
+        <li data-role="admin"><button data-tab="sensors">Sensor Monitoring</button></li>
+        <li data-role="admin"><button data-tab="waterquality">Water Quality</button></li>
+        <li data-role="admin"><button data-tab="alerts">Alerts</button></li>
+        <li data-role="admin"><button data-tab="devices">Devices</button></li>
+        <li><button data-tab="ml">ML / Prediction</button></li>
+        <li><button data-tab="reports">Reports</button></li>
+        <li data-role="admin"><button data-tab="users">Users</button></li>
+        <li data-role="admin"><button data-tab="system">System</button></li>
       </ul>
       <div class="sidebar-footer">
         <span class="user-email" id="userEmail">&nbsp;</span>
@@ -84,7 +120,7 @@
 
     <div class="main">
       <div class="topbar">
-        <h2 id="currentSectionTitle">Overview</h2>
+        <h2 id="currentSectionTitle">Dashboard</h2>
         <div class="topbar-right">
           <div class="live-pill">
             <span class="dot" id="liveDot"></span>
@@ -95,12 +131,14 @@
       </div>
 
       <div class="content">
-        <section class="tab-panel active" id="tab-overview"></section>
+        <section class="tab-panel active" id="tab-dashboard"></section>
         <section class="tab-panel" id="tab-sensors"></section>
         <section class="tab-panel" id="tab-waterquality"></section>
         <section class="tab-panel" id="tab-alerts"></section>
         <section class="tab-panel" id="tab-devices"></section>
         <section class="tab-panel" id="tab-ml"></section>
+        <section class="tab-panel" id="tab-reports"></section>
+        <section class="tab-panel" id="tab-users"></section>
         <section class="tab-panel" id="tab-system"></section>
       </div>
     </div>

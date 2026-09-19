@@ -63,7 +63,7 @@ npm run seed:model-version
 Runs `scripts/seed_model_version.js`, which reads
 `ml/models/model_metadata.json` and inserts (or replaces the active) row in
 `model_versions`, so `predictions.model_version_id` has something to point
-at and `GET /api/system/health` reports real model metadata. Run this after
+at and `GET /api/dashboard` reports real model metadata. Run this after
 retraining - see `docs/machine-learning/retraining.md`.
 
 ## 6. Local throwaway Postgres for integration testing

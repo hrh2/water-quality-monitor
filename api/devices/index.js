@@ -8,7 +8,7 @@ import { sendJson, methodNotAllowed, withErrorHandling, requireAdmin, readJsonBo
 // POST /api/devices          - register a new device, returns the plaintext
 //                               token ONCE (only the bcrypt hash is stored)
 export default withErrorHandling(async function handler(req, res) {
-  const auth = requireAdmin(req, res);
+  const auth = await requireAdmin(req, res);
   if (!auth) return;
 
   if (req.method === 'GET') {

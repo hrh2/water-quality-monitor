@@ -30,15 +30,18 @@ instead of periodic manual sampling. See
 
 ## 3. Features
 
-- Real-time sensor readout (public, `index.html`) and a full admin console (`admin.html`)
-- JWT + bcrypt admin authentication with a forced first-login password change
+- Real-time sensor readout (public, `index.html`) and a full console (`admin.html`) shared by both roles
+- JWT + bcrypt authentication, two roles (`admin`/`user`), public self-registration (name required), forced first-login password change for seeded admins
+- Role-scoped Dashboard tab with a name-based greeting: admins see cross-platform stats (all devices, all users, all-time usage), regular users see only their own prediction/report activity - enforced server-side, not just hidden client-side
+- Admin user management: list, activate/deactivate any account (self-deactivation blocked)
+- Report export (CSV/PDF) for readings, predictions, alerts, and a device summary - open to any active user, admin or self-registered
 - Device registration with per-device bcrypt-hashed tokens
 - Reading ingestion via WebSocket (the firmware's real path) or HTTP, sharing one validated pipeline
-- ML water-quality prediction (Random Forest, ~93% test accuracy) with per-class probabilities
+- ML water-quality prediction (Random Forest, ~93% test accuracy) with per-class probabilities - open to any active user, logged per-user to power their dashboard stats
 - Rule-based + statistical contamination-risk detection, independent of the ML classifier
 - Alerting with severity, acknowledgement, and resolution
 - Device online/offline status derived from last-seen time, not stored
-- Full REST API + admin dashboard: overview, sensor monitoring, water quality, alerts, devices, ML/prediction, system health
+- Full REST API + role-aware console: dashboard, sensor monitoring, water quality, alerts, devices, ML/prediction, reports, users, system health (the middle five admin-only; dashboard/ML-prediction/reports open to any active user)
 - Reproducible dataset generation + a full compare-six-models ML pipeline
 
 ## 4. Architecture

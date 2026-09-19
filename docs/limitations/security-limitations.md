@@ -40,11 +40,25 @@ queryable security audit log - there's no per-admin action history (e.g.
 via `acknowledged_by`/`acknowledged_at`, but there's no general-purpose
 admin action log covering every mutating request).
 
-## 5. Single-admin-account model, no RBAC
+## 5. Two-role model, no fine-grained RBAC
 
-`admins` has no role/permission column - every admin row has identical,
-full access to every admin-only route. There is no concept of a
-read-only admin, a per-device-scoped admin, or any other permission tier.
+`users.role` is `'admin'` or `'user'` - every admin row has identical,
+full access to every admin-only route, and every regular user has
+identical access to predictions/reports. There is no concept of a
+read-only admin, a per-device-scoped admin, or any other permission tier
+finer than these two roles.
+
+## 5b. No email verification or rate limiting on self-registration
+
+`POST /api/auth/register` (public, no auth) accepts any syntactically
+valid email with no confirmation step, and has no rate limiting - see
+§1. This means: (a) someone can register with an email they don't own
+(there's no password-reset or notification flow that would matter yet,
+but it's a real gap if one is added later), and (b) the endpoint could be
+scripted to create many accounts quickly. Acceptable for this project's
+demonstration scope; a real deployment would want at minimum a rate limit
+here and likely email verification before treating an account as fully
+trusted.
 
 ## 6. Firmware `set_config`-over-WebSocket hijack risk
 

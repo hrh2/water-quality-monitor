@@ -4,7 +4,7 @@ import { sendJson, methodNotAllowed, withErrorHandling, requireAdmin, readJsonBo
 // GET   /api/alerts?status=active           - list alerts
 // PATCH /api/alerts  { id, action }          - action: 'acknowledge' | 'resolve'
 export default withErrorHandling(async function handler(req, res) {
-  const auth = requireAdmin(req, res);
+  const auth = await requireAdmin(req, res);
   if (!auth) return;
 
   if (req.method === 'GET') {
@@ -32,7 +32,7 @@ export default withErrorHandling(async function handler(req, res) {
       const { rows } = await query(
         `UPDATE alerts SET status = 'acknowledged', acknowledged_at = now(), acknowledged_by = $1
          WHERE id = $2 RETURNING *`,
-        [auth.sub, id]
+        [auth.id, id]
       );
       if (rows.length === 0) return sendJson(res, 404, { error: 'Alert not found' });
       return sendJson(res, 200, rows[0]);

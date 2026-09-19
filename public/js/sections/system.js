@@ -6,7 +6,7 @@ export async function render(container) {
 
   let health;
   try {
-    health = await Api.getHealth();
+    health = await Api.getDashboard();
   } catch (err) {
     renderState(container, 'error', { message: safeErrorMessage(err), retryable: true, onRetry: () => render(container) });
     return;

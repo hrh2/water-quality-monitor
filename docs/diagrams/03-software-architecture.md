@@ -14,7 +14,7 @@ flowchart TB
         PREDICT_R[api/predict.js]
         PREDICTIONS_R[api/predictions.js]
         ALERTS_R[api/alerts.js]
-        HEALTH[api/system/health.js]
+        HEALTH[api/dashboard.js]
     end
 
     subgraph Shared Library api/_lib/

@@ -1,5 +1,13 @@
-// Admin authentication helpers: password hashing (bcryptjs - pure JS, no
-// native build step, safe on Vercel serverless) and JWT issue/verify.
+// Authentication helpers shared by both roles (admin/user): password
+// hashing (bcryptjs - pure JS, no native build step, safe on Vercel
+// serverless) and JWT issue/verify.
+//
+// The JWT only carries `sub`/`email`/`role` as a convenience/debugging
+// snapshot - it is NEVER trusted for authorization decisions. Every
+// protected request re-reads the account's current role and is_active
+// from the database (api/_lib/http.js::requireAuth), so a role change or
+// deactivation takes effect on the very next request, not just the next
+// time the token would otherwise be re-issued.
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -21,9 +29,9 @@ export async function verifyPassword(plainPassword, passwordHash) {
   return bcrypt.compare(plainPassword, passwordHash);
 }
 
-export function issueToken(admin) {
+export function issueToken(user) {
   return jwt.sign(
-    { sub: admin.id, email: admin.email },
+    { sub: user.id, email: user.email, role: user.role },
     getJwtSecret(),
     { expiresIn: JWT_EXPIRY }
   );

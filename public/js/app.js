@@ -1,22 +1,35 @@
 import { Api, getToken, clearToken, onUnauthorized } from './api.js';
 import { initAuthScreens } from './auth-screens.js';
-import { render as renderOverview } from './sections/overview.js';
+import { setCurrentUser } from './current-user.js';
+import { render as renderDashboard } from './sections/dashboard.js';
 import { render as renderSensors } from './sections/sensors.js';
 import { render as renderWaterQuality } from './sections/waterquality.js';
 import { render as renderAlerts } from './sections/alerts.js';
 import { render as renderDevices } from './sections/devices.js';
 import { render as renderMl } from './sections/ml.js';
+import { render as renderReports } from './sections/reports.js';
+import { render as renderUsers } from './sections/users.js';
 import { render as renderSystem } from './sections/system.js';
 
 const SECTIONS = {
-  overview: renderOverview,
+  dashboard: renderDashboard,
   sensors: renderSensors,
   waterquality: renderWaterQuality,
   alerts: renderAlerts,
   devices: renderDevices,
   ml: renderMl,
+  reports: renderReports,
+  users: renderUsers,
   system: renderSystem,
 };
+
+// Tabs whose backing API endpoints are admin-only (see docs/backend/api-contract.md) -
+// hidden entirely for a role='user' account rather than shown-then-403'd.
+// 'dashboard' is deliberately NOT in this set - it's visible to every role,
+// but api/dashboard.js returns a completely different (self-scoped)
+// payload for a non-admin caller, never another user's data.
+const ADMIN_ONLY_TABS = new Set(['sensors', 'waterquality', 'alerts', 'devices', 'users', 'system']);
+const DEFAULT_TAB_BY_ROLE = { admin: 'dashboard', user: 'dashboard' };
 
 const appShell = document.getElementById('appShell');
 const userEmailEl = document.getElementById('userEmail');
@@ -26,7 +39,7 @@ const liveDot = document.getElementById('liveDot');
 const liveText = document.getElementById('liveText');
 
 let socket = null;
-let activeTab = 'overview';
+let activeTab = 'dashboard';
 
 function applyStoredTheme() {
   let theme = null;
@@ -123,12 +136,27 @@ function wireNav() {
   });
 }
 
+function applyRoleVisibility(role) {
+  document.querySelectorAll('.nav-list li[data-role="admin"]').forEach((li) => {
+    li.classList.toggle('hidden', role !== 'admin');
+  });
+  document.querySelector('.sidebar .brand .sub').textContent =
+    role === 'admin' ? 'Admin Console' : 'Console';
+
+  if (ADMIN_ONLY_TABS.has(activeTab) && role !== 'admin') {
+    activeTab = DEFAULT_TAB_BY_ROLE[role] || 'ml';
+  }
+}
+
 async function bootDashboard(me) {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('changePasswordScreen').classList.add('hidden');
+  document.getElementById('registerScreen').classList.add('hidden');
   appShell.classList.remove('hidden');
 
+  setCurrentUser(me);
   userEmailEl.textContent = me?.email || '';
+  applyRoleVisibility(me?.role);
 
   connectWs();
   activateTab(activeTab);

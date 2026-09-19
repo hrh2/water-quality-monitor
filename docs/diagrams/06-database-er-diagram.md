@@ -1,19 +1,37 @@
 # Diagram 06: Database ER Diagram
 
-Transcribed directly from `db/migrations/0001_init.sql`. Narrative
-explanation of each table, including the "device status is derived, not
-stored" rule and why `predictions` merges two spec concepts, is in
+Transcribed directly from `db/migrations/0001_init.sql`,
+`0002_users_and_roles.sql`, and `0003_profile_and_prediction_log.sql`.
+Narrative explanation of each table, including the "device status is
+derived, not stored" rule, why `predictions` merges two spec concepts, and
+why `prediction_requests` is a separate table from `predictions`, is in
 `docs/database/schema.md`.
 
 ```mermaid
 erDiagram
-    ADMINS {
+    USERS {
         uuid id PK
         text email UK
         text password_hash
+        text role "CHECK admin/user"
+        text first_name "nullable"
+        text last_name "nullable"
         boolean must_change_password
+        boolean is_active
         timestamptz created_at
         timestamptz last_login_at
+    }
+
+    PREDICTION_REQUESTS {
+        bigserial id PK
+        uuid user_id FK
+        double ph "nullable"
+        double turbidity_ntu
+        double tds_ppm
+        text water_quality_category "CHECK Safe/Moderate/Unsafe/Critical"
+        double prediction_confidence
+        jsonb class_probabilities
+        timestamptz created_at
     }
 
     DEVICES {
@@ -85,11 +103,13 @@ erDiagram
     MODEL_VERSIONS ||--o{ PREDICTIONS : "model_version_id"
     DEVICES ||--o{ ALERTS : "device_id"
     SENSOR_READINGS |o--o{ ALERTS : "reading_id"
-    ADMINS ||--o{ ALERTS : "acknowledged_by"
+    USERS ||--o{ ALERTS : "acknowledged_by"
+    USERS ||--o{ PREDICTION_REQUESTS : "user_id"
 ```
 
-Indexes defined in the migration (see `docs/database/schema.md` for why
+Indexes defined in the migrations (see `docs/database/schema.md` for why
 each exists): `idx_sensor_readings_device_time`, `one_active_model`
 (partial unique on `model_versions.is_active`), `one_prediction_per_reading`
 (unique on `predictions.reading_id`), `idx_predictions_category`,
-`idx_alerts_status`, `idx_system_events_time`.
+`idx_alerts_status`, `idx_system_events_time`, `idx_users_role`,
+`idx_prediction_requests_user_time`.

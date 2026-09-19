@@ -8,7 +8,7 @@ import { sendJson, methodNotAllowed, withErrorHandling, requireAdmin, readJsonBo
 //         this HTTP path uses the exact same api/_lib/ingest.js pipeline)
 export default withErrorHandling(async function handler(req, res) {
   if (req.method === 'GET') {
-    const auth = requireAdmin(req, res);
+    const auth = await requireAdmin(req, res);
     if (!auth) return;
 
     const { device_id, from, to, limit } = req.query;

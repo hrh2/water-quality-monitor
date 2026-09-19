@@ -1,13 +1,14 @@
 import { query } from './_lib/db.js';
-import { sendJson, methodNotAllowed, withErrorHandling, requireAdmin } from './_lib/http.js';
+import { sendJson, methodNotAllowed, withErrorHandling, requireUser } from './_lib/http.js';
 
 // GET /api/predictions?category=&device_id=&limit=
 // Lists recent stored predictions (joined with their reading) plus overall
-// class distribution, for the ML dashboard tab.
+// class distribution, for the ML dashboard tab. Any active user (admin or
+// self-registered) can view this - it's not per-user-scoped data.
 export default withErrorHandling(async function handler(req, res) {
   if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
 
-  const auth = requireAdmin(req, res);
+  const auth = await requireUser(req, res);
   if (!auth) return;
 
   const { category, device_id, limit } = req.query;

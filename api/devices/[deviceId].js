@@ -6,7 +6,7 @@ import { sendJson, methodNotAllowed, withErrorHandling, requireAdmin } from '../
 export default withErrorHandling(async function handler(req, res) {
   if (req.method !== 'GET') return methodNotAllowed(res, ['GET']);
 
-  const auth = requireAdmin(req, res);
+  const auth = await requireAdmin(req, res);
   if (!auth) return;
 
   const { deviceId } = req.query;

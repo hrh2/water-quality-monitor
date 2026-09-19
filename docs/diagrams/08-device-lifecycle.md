@@ -32,7 +32,7 @@ Notes:
   persisted (`devices.device_token_hash`).
 - Device status is never a stored column; `deriveDeviceStatus` computes it
   from `last_seen_at` on every read (`GET /api/devices`,
-  `GET /api/devices/:deviceId`, `GET /api/system/health`), using
+  `GET /api/devices/:deviceId`, `GET /api/dashboard`), using
   `ONLINE_THRESHOLD_MS = 90_000` - chosen as one full WiFi-reconnect
   backoff cycle (capped at 60s) of slack beyond the firmware's 3-second
   read interval.

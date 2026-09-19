@@ -37,9 +37,6 @@ for (const key of ['DATABASE_URL', 'JWT_SECRET']) {
 const wsServer = (await import(path.join(REPO_ROOT, 'api/ws.js'))).default;
 
 const routes = {
-  'POST /api/auth/login': (await import(path.join(REPO_ROOT, 'api/auth/login.js'))).default,
-  'GET /api/auth/me': (await import(path.join(REPO_ROOT, 'api/auth/me.js'))).default,
-  'POST /api/auth/change-password': (await import(path.join(REPO_ROOT, 'api/auth/change-password.js'))).default,
   'GET /api/devices': (await import(path.join(REPO_ROOT, 'api/devices/index.js'))).default,
   'POST /api/devices': (await import(path.join(REPO_ROOT, 'api/devices/index.js'))).default,
   'GET /api/readings': (await import(path.join(REPO_ROOT, 'api/readings.js'))).default,
@@ -48,9 +45,13 @@ const routes = {
   'GET /api/predictions': (await import(path.join(REPO_ROOT, 'api/predictions.js'))).default,
   'GET /api/alerts': (await import(path.join(REPO_ROOT, 'api/alerts.js'))).default,
   'PATCH /api/alerts': (await import(path.join(REPO_ROOT, 'api/alerts.js'))).default,
-  'GET /api/system/health': (await import(path.join(REPO_ROOT, 'api/system/health.js'))).default,
+  'GET /api/dashboard': (await import(path.join(REPO_ROOT, 'api/dashboard.js'))).default,
+  'GET /api/users': (await import(path.join(REPO_ROOT, 'api/users/index.js'))).default,
+  'PATCH /api/users': (await import(path.join(REPO_ROOT, 'api/users/index.js'))).default,
 };
 const deviceDetailHandler = (await import(path.join(REPO_ROOT, 'api/devices/[deviceId].js'))).default;
+const authActionHandler = (await import(path.join(REPO_ROOT, 'api/auth/[action].js'))).default;
+const reportTypeHandler = (await import(path.join(REPO_ROOT, 'api/reports/[type].js'))).default;
 
 const CONTENT_TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' };
 
@@ -87,6 +88,18 @@ const server = http.createServer(async (req, res) => {
   if (deviceMatch) {
     req.query.deviceId = deviceMatch[1];
     return deviceDetailHandler(req, res);
+  }
+
+  const authMatch = url.pathname.match(/^\/api\/auth\/([^/]+)$/);
+  if (authMatch) {
+    req.query.action = authMatch[1];
+    return authActionHandler(req, res);
+  }
+
+  const reportMatch = url.pathname.match(/^\/api\/reports\/([^/]+)$/);
+  if (reportMatch) {
+    req.query.type = reportMatch[1];
+    return reportTypeHandler(req, res);
   }
 
   const handler = routes[`${req.method} ${url.pathname}`];

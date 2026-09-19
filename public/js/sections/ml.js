@@ -12,22 +12,23 @@ const CATEGORY_COLORS = {
 export async function render(container) {
   renderState(container, 'loading', { loadingText: 'Loading model info…' });
 
-  let health;
-  let predictionsResp;
-  try {
-    [health, predictionsResp] = await Promise.all([
-      Api.getHealth(),
-      Api.getPredictions({ limit: 10 }).catch(() => ({ predictions: [] })),
-    ]);
-  } catch (err) {
-    renderState(container, 'error', { message: safeErrorMessage(err), retryable: true, onRetry: () => render(container) });
-    return;
-  }
+  // Api.getDashboard() is role-aware (see api/dashboard.js): a regular
+  // user gets their own usage stats back, which has no `ml_model` field -
+  // so `model` below is simply undefined for them, and the "Model status"
+  // card doesn't render. Still wrapped in .catch() in case the call fails
+  // outright (network error etc.), isolating that to this one card rather
+  // than failing the whole tab like Api.getPredictions() already does for
+  // its own possible failure.
+  const [health, predictionsResp] = await Promise.all([
+    Api.getDashboard().catch(() => null),
+    Api.getPredictions({ limit: 10 }).catch(() => ({ predictions: [] })),
+  ]);
 
-  const model = health.ml_model || {};
-  const modelOk = model.status === 'ok';
+  const model = health?.ml_model || null;
+  const modelOk = model?.status === 'ok';
 
   container.innerHTML = `
+    ${model ? `
     <div class="panel-box">
       <h4>Model status</h4>
       <div class="card-grid" style="margin-bottom:0;">
@@ -51,13 +52,14 @@ export async function render(container) {
         </div>
       </div>
     </div>
+    ` : ''}
 
     <div class="grid-2">
       <div class="panel-box">
         <h4>Try a prediction</h4>
         <p class="text-dim" style="font-size:12.5px; margin-top:-8px;">
-          Runs the model against the values you enter. This is a stateless what-if tool -
-          nothing is saved to the database.
+          Runs the model against the values you enter. No new sensor or device data is
+          created - only the request itself is logged (to power your Dashboard's usage stats).
         </p>
         <form id="tryPredictForm">
           <div class="inline-fields">
